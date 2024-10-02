@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "bank_accounts" ALTER COLUMN "bank" SET DEFAULT 'BCA',
+ALTER COLUMN "acc_number" SET DEFAULT '311265432556',
+ALTER COLUMN "acc_name" SET DEFAULT 'Seller';

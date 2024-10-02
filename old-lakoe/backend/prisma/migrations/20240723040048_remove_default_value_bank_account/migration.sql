@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "bank_accounts" ALTER COLUMN "bank" DROP DEFAULT,
+ALTER COLUMN "acc_number" DROP DEFAULT,
+ALTER COLUMN "acc_name" DROP DEFAULT;

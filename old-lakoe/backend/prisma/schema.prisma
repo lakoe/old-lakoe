@@ -1,0 +1,288 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model users {
+  id         String     @id @unique @default(uuid())
+  name       String
+  email      String     @unique
+  phone      String
+  password   String
+  store      stores?    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  store_id   String?    @unique
+  role_id    Int
+  isVerified Boolean    @default(false)
+  carts      carts[]
+  invoices   invoices[]
+  payments   payments[]
+  withdraw   withdraw[]
+  created_at DateTime   @default(now())
+  updated_at DateTime   @default(now()) @updatedAt
+
+  @@map("users")
+}
+
+model carts {
+  id          String        @id @unique @default(uuid())
+  prices      Int           @default(0)
+  discount    Int           @default(0)
+  users       users         @relation(fields: [users_id], references: [id], onDelete: Cascade)
+  users_id    String
+  carts_items carts_items[]
+  invoices    invoices?
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @default(now()) @updatedAt
+
+  @@map("carts")
+}
+
+model carts_items {
+  id         String   @id @unique @default(uuid())
+  name       String
+  quantity   Int
+  price      Int
+  store      stores   @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  store_id   String
+  product    products @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id String
+  cart       carts    @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+  img        String?
+  cart_id    String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+}
+
+model discounts {
+  id         String     @id @unique @default(uuid())
+  code       String     @unique
+  amount     Int
+  invoice    invoices[]
+  created_at DateTime   @default(now())
+  updated_at DateTime   @default(now()) @updatedAt
+}
+
+model stores {
+  id                String              @id @unique @default(uuid())
+  name              String
+  slogan            String?
+  description       String?
+  domain            String?
+  courier           String[]            @default(["grab", "jne", "tiki", "gojek"])
+  logo_attachment   String              @default("https://seeklogo.com/images/L/logo-com-hr-logo-5636A4D2D5-seeklogo.com.png")
+  banner_attachment String              @default("https://dummyimage.com/hd1080")
+  user              users?
+  carts_item        carts_items[]
+  message_templates message_templates[]
+  location          location[]
+  bank_accounts     bank_accounts[]
+  products          products[]
+  invoice           invoices[]
+  courier_list      courier_list[]
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now()) @updatedAt
+
+  @@map("stores")
+}
+
+model message_templates {
+  id         String   @id @unique @default(uuid())
+  name       String
+  content    String
+  store_id   stores[]
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+}
+
+model location {
+  id               String   @id @unique @default(uuid())
+  name             String   @default("Monas")
+  address          String   @default("DKI Jakarta")
+  postal_code      Int      @default(10160)
+  city_district    String   @default("Jakarta Pusat")
+  lattitude        String   @default("-6.1745517")
+  Longitude        String   @default("106.8205983")
+  store            stores   @relation(fields: [store_id], references: [id])
+  store_id         String
+  is_main_location Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+}
+
+model bank_accounts {
+  id         String   @id @unique @default(uuid())
+  bank       String
+  acc_number String
+  acc_name   String
+  store      stores   @relation(fields: [store_id], references: [id])
+  store_id   String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+}
+
+model products {
+  id            String        @id @unique @default(uuid())
+  name          String
+  description   String?
+  attachments   String[]
+  is_active     Boolean       @default(false)
+  variants      variants[]
+  size          String[]
+  minimum_order Int
+  store         stores?       @relation(fields: [store_id], references: [id])
+  store_id      String?
+  categories    categories?   @relation(fields: [categories_id], references: [id], onDelete: Cascade)
+  categories_id String?
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @default(now()) @updatedAt
+  // carts_items   carts_items[]
+  carts_items   carts_items[]
+}
+
+model categories {
+  id         String     @id @unique @default(uuid())
+  name       String     @unique
+  product_id products[]
+  created_at DateTime   @default(now())
+  updated_at DateTime   @default(now()) @updatedAt
+}
+
+model variant_options {
+  id                    String                 @id @unique @default(uuid())
+  name                  String
+  variant               variants               @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+  variant_id            String                 @unique
+  variant_option_values variant_option_values?
+  created_at            DateTime               @default(now())
+  updated_at            DateTime               @default(now()) @updatedAt
+}
+
+model variants {
+  id             String            @id @unique @default(uuid())
+  name           String
+  is_active      Boolean
+  product        products          @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id     String
+  variant_option variant_options[]
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @default(now()) @updatedAt
+}
+
+model variant_option_values {
+  id                String          @id @unique @default(uuid())
+  variant_option    variant_options @relation(fields: [variant_option_id], references: [id], onDelete: Cascade)
+  variant_option_id String          @unique
+  sku               String
+  weight            Int
+  stock             Int
+  price             Int
+  is_active         Boolean
+  img               String?
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @default(now()) @updatedAt
+}
+
+model invoices {
+  id                   String              @id @unique @default(uuid())
+  prices               Int
+  service_charge       Int
+  discount             discounts?          @relation(fields: [discount_id], references: [id])
+  discount_id          String?
+  status               InvoiceStatus       @default(BELUM_DIBAYAR)
+  receiver_longitude   String
+  receiver_latitude    String
+  receiver_district    String
+  receiver_phone       String
+  receiver_address     String
+  receiver_name        String
+  receiver_postal_code Int?
+  invoice_number       String?
+  cart                 carts?              @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+  cart_id              String?             @unique
+  store                stores              @relation(fields: [store_id], references: [id])
+  store_id             String
+  midtrans_token_id    String?             @unique
+  courier              couriers?
+  invoice_histories    invoice_histories[]
+  user                 users               @relation(fields: [user_id], references: [id])
+  user_id              String
+  created_at           DateTime            @default(now())
+  updated_at           DateTime            @default(now()) @updatedAt
+}
+
+model invoice_histories {
+  id         String        @id @unique @default(uuid())
+  invoice    invoices      @relation(fields: [invoice_id], references: [id])
+  invoice_id String
+  status     InvoiceStatus @default(BELUM_DIBAYAR)
+  created_at DateTime      @default(now())
+}
+
+model payments {
+  id                String   @id @unique @default(uuid())
+  bank              String?
+  amount            String?
+  status            String?
+  midtrans_order_id String?  @unique
+  users             users    @relation(fields: [users_id], references: [id])
+  users_id          String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now()) @updatedAt
+}
+
+model couriers {
+  id                   String   @id @unique @default(uuid())
+  courier_code         String
+  courier_service_name String
+  price                Int
+  invoice              invoices @relation(fields: [invoice_id], references: [id])
+  invoice_id           String   @unique
+  tracking_id          String?  @unique
+  created_at           DateTime @default(now())
+  updated_at           DateTime @default(now()) @updatedAt
+}
+
+model courier_list {
+  id                   String   @id @unique @default(uuid())
+  courier_service_name String
+  courier_service_code String
+  store                stores   @relation(fields: [store_id], references: [id])
+  store_id             String
+  logo                 String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @default(now()) @updatedAt
+}
+
+model withdraw {
+  id        String   @id @unique @default(uuid())
+  nominal   Int
+  bank      String
+  rekening  String
+  name      String
+  status    String   @default("Menunggu")
+  user      users    @relation(fields: [user_id], references: [id])
+  user_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model voucher {
+  id        String   @id @unique @default(uuid())
+  nominal   Int
+  code      String   @unique
+  createdAt DateTime @default(now())
+}
+
+enum InvoiceStatus {
+  BELUM_DIBAYAR
+  PESANAN_BARU
+  SIAP_DIKIRIM
+  DALAM_PENGIRIMAN
+  PESANAN_SELESAI
+  DIBATALKAN
+}

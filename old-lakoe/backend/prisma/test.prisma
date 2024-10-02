@@ -1,0 +1,44 @@
+// generator client {
+//     provider = "prisma-client-js"
+// }
+
+// datasource db {
+//     provider = "postgresql"
+//     url      = env("DATABASE_URL")
+// }
+
+// model Profile {
+//     id   Int    @id @default(autoincrement())
+//     name String
+//     user User?
+
+//     @@map("roles")
+// }
+
+// model User {
+//     id   Int    @id @default(autoincrement())
+//     name String
+
+//     profile    Profile @relation(fields: [profile_id], references: [id])
+//     profile_id Int     @unique
+// }
+
+
+// model Product {
+
+// }
+
+// model ProductCategory {
+    
+//     product_id
+//     category_id
+// }
+
+// model Category {
+
+// }
+
+
+// sepatu biru => sepatu, biru
+
+// sepatu hijau => sepatu, hijau
